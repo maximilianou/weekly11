@@ -1,16 +1,3 @@
-### ../../../app01/Makefile 
-```
-ng1:
-	npm install -g @angular/cli
-	ng new frontend
-ng2: 
-	cd frontend && ng serve
-ng3:
-	docker-compose -f docker-compose.dev.yml up	--build
-ng4:
-	docker-compose -f docker-compose.dev.yml down	
-
-```
 ### ../../../app01/docker-compose.dev.yml 
 ```
 version: "3.8" # specify docker-compose version
@@ -71,6 +58,43 @@ services:
 #      - "27017:27017" # specify port forewarding
 
 ```
+### ../../../app01/Makefile 
+```
+ng1:
+	npm install -g @angular/cli
+	ng new frontend
+ng2: 
+	cd frontend && ng serve
+ng3:
+	docker-compose -f docker-compose.dev.yml up	--build
+ng4:
+	docker-compose -f docker-compose.dev.yml down	
+
+```
+### ../../../app01/frontend/Dockerfile.dev 
+```
+# Create image based off of the official 12.8-alpine
+FROM node:14-alpine
+
+# disabling ssl for npm for Dev or if you are behind proxy
+RUN npm set strict-ssl false
+#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
+
+WORKDIR /frontend
+
+# Copy dependency definitions
+COPY package.json ./
+
+## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
+RUN npm i
+
+COPY . .
+
+EXPOSE 4200 49153
+
+CMD ["npm", "start"]
+
+```
 ### ../../../app01/frontend/package.json 
 ```
 {
@@ -121,27 +145,96 @@ services:
 }
 
 ```
-### ../../../app01/frontend/Dockerfile.dev 
+### ../../../app02/frontend/src/app/app.module.ts 
 ```
-# Create image based off of the official 12.8-alpine
-FROM node:14-alpine
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
 
-# disabling ssl for npm for Dev or if you are behind proxy
-RUN npm set strict-ssl false
-#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { MenuComponent } from './menu/menu.component';
 
-WORKDIR /frontend
+import { FormsModule } from '@angular/forms';
 
-# Copy dependency definitions
-COPY package.json ./
+@NgModule({
+  declarations: [
+    AppComponent,
+    MenuComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
 
-## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-RUN npm i
+```
+### ../../../app02/frontend/src/app/app.component.ts 
+```
+import { Component } from '@angular/core';
 
-COPY . .
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'Cooking !!!';
+}
 
-EXPOSE 4200 49153
+```
+### ../../../app02/frontend/src/app/app.component.html 
+```
+<h1>{{title}}</h1>
+<app-menu></app-menu>
+<router-outlet></router-outlet>
 
-CMD ["npm", "start"]
+```
+### ../../../app02/frontend/src/app/dish.ts 
+```
+export interface Dish {
+    id: number;
+    name: string;
+}
+```
+### ../../../app02/frontend/src/app/menu/menu.component.ts 
+```
+import { Component, OnInit } from '@angular/core';
+import { Dish } from '../dish';
+
+@Component({
+  selector: 'app-menu',
+  templateUrl: './menu.component.html',
+  styleUrls: ['./menu.component.css']
+})
+export class MenuComponent implements OnInit {
+
+  dish : Dish = { 
+    id: 1,
+    name: 'Lasagna'
+  };
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+### ../../../app02/frontend/src/app/menu/menu.component.html 
+```
+<h2>{{ dish.name | uppercase }} Detail</h2>
+<div><span>id:</span>{{dish.id}}</div>
+<div><span>name:</span>{{dish.name}}</div>
+<div>
+    <label>
+        name:
+        <input [(ngModel)]="dish.name" placeholder="dish.name" />
+    </label>
+</div>
 
 ```

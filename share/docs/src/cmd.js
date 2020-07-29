@@ -11,6 +11,30 @@ const filesIn = [
     path: '../../../app01/frontend/package.json',
     mark: '\n```\n',
   },
+  {
+    path: '../../../app02/frontend/src/app/app.module.ts',
+    mark: '\n```\n',
+  },
+  {
+    path: '../../../app02/frontend/src/app/app.component.ts',
+    mark: '\n```\n',
+  },
+  {
+    path: '../../../app02/frontend/src/app/app.component.html',
+    mark: '\n```\n',
+  },
+  {
+    path: '../../../app02/frontend/src/app/dish.ts',
+    mark: '\n```\n',
+  },
+  {
+    path: '../../../app02/frontend/src/app/menu/menu.component.ts',
+    mark: '\n```\n',
+  },
+  {
+    path: '../../../app02/frontend/src/app/menu/menu.component.html',
+    mark: '\n```\n',
+  },
 ];
 const publish = (cmd) => {
   remove({ fileOut: cmd.fileOut });
