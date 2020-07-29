@@ -4,6 +4,6 @@ ng1:
 ng2: 
 	cd frontend && ng serve
 ng3:
-	docker-compose -f docker-compose.dev.yml up	
+	docker-compose -f docker-compose.dev.yml up	--build
 ng4:
 	docker-compose -f docker-compose.dev.yml down	
