@@ -1,3 +1,16 @@
+### ../../../app01/Makefile 
+```
+ng1:
+	npm install -g @angular/cli
+	ng new frontend
+ng2: 
+	cd frontend && ng serve
+ng3:
+	docker-compose -f docker-compose.dev.yml up	--build
+ng4:
+	docker-compose -f docker-compose.dev.yml down	
+
+```
 ### ../../../app01/docker-compose.dev.yml 
 ```
 version: "3.8" # specify docker-compose version
@@ -58,19 +71,6 @@ services:
 #      - "27017:27017" # specify port forewarding
 
 ```
-### ../../../app01/Makefile 
-```
-ng1:
-	npm install -g @angular/cli
-	ng new frontend
-ng2: 
-	cd frontend && ng serve
-ng3:
-	docker-compose -f docker-compose.dev.yml up	--build
-ng4:
-	docker-compose -f docker-compose.dev.yml down	
-
-```
 ### ../../../app01/frontend/Dockerfile.dev 
 ```
 # Create image based off of the official 12.8-alpine
@@ -93,33 +93,6 @@ COPY . .
 EXPOSE 4200 49153
 
 CMD ["npm", "start"]
-
-```
-### ../../../app02/frontend/src/app/app.module.ts 
-```
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { MenuComponent } from './menu/menu.component';
-
-import { FormsModule } from '@angular/forms';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    MenuComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
 
 ```
 ### ../../../app01/frontend/package.json 
@@ -172,6 +145,35 @@ export class AppModule { }
 }
 
 ```
+### ../../../app02/frontend/src/app/app.module.ts 
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { MenuComponent } from './menu/menu.component';
+
+import { FormsModule } from '@angular/forms';
+import { DishDetailComponent } from './dish-detail/dish-detail.component';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    MenuComponent,
+    DishDetailComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+```
 ### ../../../app02/frontend/src/app/app.component.ts 
 ```
 import { Component } from '@angular/core';
@@ -184,6 +186,13 @@ import { Component } from '@angular/core';
 export class AppComponent {
   title = 'Cooking !!!';
 }
+
+```
+### ../../../app02/frontend/src/app/app.component.html 
+```
+<h1>{{title}}</h1>
+<app-menu></app-menu>
+<router-outlet></router-outlet>
 
 ```
 ### ../../../app02/frontend/src/app/dish.ts 
@@ -206,13 +215,6 @@ export const DISHES : Dish[] = [
     { id: 16, name: 'Risotto' },
     { id: 17, name: 'Soup' },
 ]
-```
-### ../../../app02/frontend/src/app/app.component.html 
-```
-<h1>{{title}}</h1>
-<app-menu></app-menu>
-<router-outlet></router-outlet>
-
 ```
 ### ../../../app02/frontend/src/app/menu/menu.component.ts 
 ```
@@ -242,6 +244,7 @@ export class MenuComponent implements OnInit {
 ```
 ### ../../../app02/frontend/src/app/menu/menu.component.html 
 ```
+<h2>Menu</h2>
 <ul class="menu">
   <li *ngFor="let dish of dishes"
     [class.selected]="dish === selectedDish"
@@ -250,14 +253,41 @@ export class MenuComponent implements OnInit {
   <span>name:</span>{{dish.name}}
   </li>
 </ul>
-<div *ngIf="selectedDish">
-  <h2>{{ selectedDish.name | uppercase }} Details</h2>
-  <div><span>id:</span>{{selectedDish.id}}</div>
-  <div>
-    <label>name:
-      <input [(ngModel)]="selectedDish.name" placeholder="selectedDish.name" />
-    </label>
-  </div>
-</div>
+<app-dish-detail [dish]="selectedDish"></app-dish-detail>
 
+```
+### ../../../app02/frontend/src/app/dish-detail/dish-detail.component.ts 
+```
+import { Component, OnInit, Input } from '@angular/core';
+import { Dish } from '../dish';
+
+@Component({
+  selector: 'app-dish-detail',
+  templateUrl: './dish-detail.component.html',
+  styleUrls: ['./dish-detail.component.css']
+})
+export class DishDetailComponent implements OnInit {
+
+  @Input() dish : Dish;
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+### ../../../app02/frontend/src/app/dish-detail/dish-detail.component.html 
+```
+<div *ngIf="dish">
+    <h2>{{ dish.name | uppercase }} Details</h2>
+    <div><span>id:</span>{{dish.id}}</div>
+    <div>
+      <label>name:
+        <input [(ngModel)]="dish.name" placeholder="dish.name" />
+      </label>
+    </div>
+  </div>
+  
 ```
