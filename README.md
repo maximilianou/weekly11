@@ -220,8 +220,8 @@ export const DISHES : Dish[] = [
 ```
 import { Component, OnInit } from '@angular/core';
 import { Dish } from '../dish';
-import { DISHES } from '../mock-dishes';
-
+//import { DISHES } from '../mock-dishes';
+import { DishService } from '../dish.service';
 @Component({
   selector: 'app-menu',
   templateUrl: './menu.component.html',
@@ -229,15 +229,21 @@ import { DISHES } from '../mock-dishes';
 })
 export class MenuComponent implements OnInit {
 
-  dishes = DISHES;
+  dishes: Dish[];
   selectedDish: Dish;
-  constructor() { }
+
+  constructor(private dishService: DishService) { }
 
   ngOnInit(): void {
+    this.getDishes();
   }
 
   onSelect(dish: Dish): void{
     this.selectedDish = dish;
+  }
+
+  getDishes(): void{
+    this.dishes = this.dishService.getDishes();
   }
 }
 
@@ -290,4 +296,23 @@ export class DishDetailComponent implements OnInit {
     </div>
   </div>
   
+```
+### ../../../app02/frontend/src/app/dish.service.ts 
+```
+import { Injectable } from '@angular/core';
+import { Dish } from './dish';
+import { DISHES } from './mock-dishes';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DishService {
+
+  constructor() { }
+
+  getDishes(): Dish[]{
+    return DISHES;
+  }
+}
+
 ```
