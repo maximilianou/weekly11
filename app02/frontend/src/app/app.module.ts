@@ -7,12 +7,14 @@ import { MenuComponent } from './menu/menu.component';
 
 import { FormsModule } from '@angular/forms';
 import { DishDetailComponent } from './dish-detail/dish-detail.component';
+import { MessagesComponent } from './messages/messages.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MenuComponent,
-    DishDetailComponent
+    DishDetailComponent,
+    MessagesComponent
   ],
   imports: [
     BrowserModule,
