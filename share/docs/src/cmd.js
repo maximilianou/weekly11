@@ -28,6 +28,10 @@ const filesIn = [
     mark: '\n```\n',
   },
   {
+    path: '../../../app02/frontend/src/app/mock-dishes.ts',
+    mark: '\n```\n',
+  },
+  {
     path: '../../../app02/frontend/src/app/menu/menu.component.ts',
     mark: '\n```\n',
   },

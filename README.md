@@ -95,6 +95,33 @@ EXPOSE 4200 49153
 CMD ["npm", "start"]
 
 ```
+### ../../../app02/frontend/src/app/app.module.ts 
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { MenuComponent } from './menu/menu.component';
+
+import { FormsModule } from '@angular/forms';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    MenuComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+```
 ### ../../../app01/frontend/package.json 
 ```
 {
@@ -145,33 +172,6 @@ CMD ["npm", "start"]
 }
 
 ```
-### ../../../app02/frontend/src/app/app.module.ts 
-```
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { MenuComponent } from './menu/menu.component';
-
-import { FormsModule } from '@angular/forms';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    MenuComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-```
 ### ../../../app02/frontend/src/app/app.component.ts 
 ```
 import { Component } from '@angular/core';
@@ -186,13 +186,6 @@ export class AppComponent {
 }
 
 ```
-### ../../../app02/frontend/src/app/app.component.html 
-```
-<h1>{{title}}</h1>
-<app-menu></app-menu>
-<router-outlet></router-outlet>
-
-```
 ### ../../../app02/frontend/src/app/dish.ts 
 ```
 export interface Dish {
@@ -200,10 +193,32 @@ export interface Dish {
     name: string;
 }
 ```
+### ../../../app02/frontend/src/app/mock-dishes.ts 
+```
+import { Dish } from './dish';
+
+export const DISHES : Dish[] = [
+    { id: 11, name: 'Lasagna' },
+    { id: 12, name: 'Parmesana' },
+    { id: 13, name: 'Ravioli' },
+    { id: 14, name: 'Spaguetti' },
+    { id: 15, name: 'Milanesa' },
+    { id: 16, name: 'Risotto' },
+    { id: 17, name: 'Soup' },
+]
+```
+### ../../../app02/frontend/src/app/app.component.html 
+```
+<h1>{{title}}</h1>
+<app-menu></app-menu>
+<router-outlet></router-outlet>
+
+```
 ### ../../../app02/frontend/src/app/menu/menu.component.ts 
 ```
 import { Component, OnInit } from '@angular/core';
 import { Dish } from '../dish';
+import { DISHES } from '../mock-dishes';
 
 @Component({
   selector: 'app-menu',
@@ -212,29 +227,37 @@ import { Dish } from '../dish';
 })
 export class MenuComponent implements OnInit {
 
-  dish : Dish = { 
-    id: 1,
-    name: 'Lasagna'
-  };
-
+  dishes = DISHES;
+  selectedDish: Dish;
   constructor() { }
 
   ngOnInit(): void {
   }
 
+  onSelect(dish: Dish): void{
+    this.selectedDish = dish;
+  }
 }
 
 ```
 ### ../../../app02/frontend/src/app/menu/menu.component.html 
 ```
-<h2>{{ dish.name | uppercase }} Detail</h2>
-<div><span>id:</span>{{dish.id}}</div>
-<div><span>name:</span>{{dish.name}}</div>
-<div>
-    <label>
-        name:
-        <input [(ngModel)]="dish.name" placeholder="dish.name" />
+<ul class="menu">
+  <li *ngFor="let dish of dishes"
+    [class.selected]="dish === selectedDish"
+    (click)="onSelect(dish)"> 
+  <span>id:</span>{{dish.id}}
+  <span>name:</span>{{dish.name}}
+  </li>
+</ul>
+<div *ngIf="selectedDish">
+  <h2>{{ selectedDish.name | uppercase }} Details</h2>
+  <div><span>id:</span>{{selectedDish.id}}</div>
+  <div>
+    <label>name:
+      <input [(ngModel)]="selectedDish.name" placeholder="selectedDish.name" />
     </label>
+  </div>
 </div>
 
 ```
