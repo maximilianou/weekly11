@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Dish } from '../dish';
+import { DISHES } from '../mock-dishes';
 
 @Component({
   selector: 'app-menu',
@@ -8,14 +9,14 @@ import { Dish } from '../dish';
 })
 export class MenuComponent implements OnInit {
 
-  dish : Dish = { 
-    id: 1,
-    name: 'Lasagna'
-  };
-
+  dishes = DISHES;
+  selectedDish: Dish;
   constructor() { }
 
   ngOnInit(): void {
   }
 
+  onSelect(dish: Dish): void{
+    this.selectedDish = dish;
+  }
 }
