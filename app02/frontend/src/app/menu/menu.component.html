@@ -1,3 +1,4 @@
+<h2>Menu</h2>
 <ul class="menu">
   <li *ngFor="let dish of dishes"
     [class.selected]="dish === selectedDish"
@@ -6,12 +7,4 @@
   <span>name:</span>{{dish.name}}
   </li>
 </ul>
-<div *ngIf="selectedDish">
-  <h2>{{ selectedDish.name | uppercase }} Details</h2>
-  <div><span>id:</span>{{selectedDish.id}}</div>
-  <div>
-    <label>name:
-      <input [(ngModel)]="selectedDish.name" placeholder="selectedDish.name" />
-    </label>
-  </div>
-</div>
+<app-dish-detail [dish]="selectedDish"></app-dish-detail>
