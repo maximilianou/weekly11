@@ -71,30 +71,6 @@ services:
 #      - "27017:27017" # specify port forewarding
 
 ```
-### ../../../app01/frontend/Dockerfile.dev 
-```
-# Create image based off of the official 12.8-alpine
-FROM node:14-alpine
-
-# disabling ssl for npm for Dev or if you are behind proxy
-RUN npm set strict-ssl false
-#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
-
-WORKDIR /frontend
-
-# Copy dependency definitions
-COPY package.json ./
-
-## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-RUN npm i
-
-COPY . .
-
-EXPOSE 4200 49153
-
-CMD ["npm", "start"]
-
-```
 ### ../../../app01/frontend/package.json 
 ```
 {
@@ -143,6 +119,30 @@ CMD ["npm", "start"]
     "typescript": "~3.9.5"
   }
 }
+
+```
+### ../../../app01/frontend/Dockerfile.dev 
+```
+# Create image based off of the official 12.8-alpine
+FROM node:14-alpine
+
+# disabling ssl for npm for Dev or if you are behind proxy
+RUN npm set strict-ssl false
+#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
+
+WORKDIR /frontend
+
+# Copy dependency definitions
+COPY package.json ./
+
+## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
+RUN npm i
+
+COPY . .
+
+EXPOSE 4200 49153
+
+CMD ["npm", "start"]
 
 ```
 ### ../../../app02/frontend/src/app/app.module.ts 
@@ -224,6 +224,19 @@ export const DISHES : Dish[] = [
     { id: 17, name: 'Soup' },
 ]
 ```
+### ../../../app02/frontend/src/app/menu/menu.component.html 
+```
+<ul class="menu">
+  <li *ngFor="let dish of dishes">
+    <a
+    routerLink="/detail/{{dish.id}}">
+
+      <span>{{dish.id}}</span>{{dish.name}}
+    </a>
+  </li>
+</ul>
+
+```
 ### ../../../app02/frontend/src/app/menu/menu.component.ts 
 ```
 import { Component, OnInit } from '@angular/core';
@@ -252,19 +265,6 @@ export class MenuComponent implements OnInit {
       .subscribe( dishes => this.dishes = dishes );
   }
 }
-
-```
-### ../../../app02/frontend/src/app/menu/menu.component.html 
-```
-<ul class="menu">
-  <li *ngFor="let dish of dishes">
-    <a
-    routerLink="/detail/{{dish.id}}">
-
-      <span>{{dish.id}}</span>{{dish.name}}
-    </a>
-  </li>
-</ul>
 
 ```
 ### ../../../app02/frontend/src/app/dish-detail/dish-detail.component.ts 
@@ -299,6 +299,9 @@ export class DishDetailComponent implements OnInit {
     this.dishService.getDish(id)
       .subscribe(dish => this.dish = dish);
   }
+  goBack(): void {
+    this.location.back();
+  }
 
 }
 
@@ -314,6 +317,7 @@ export class DishDetailComponent implements OnInit {
       </label>
     </div>
   </div>
+  <button (click)="goBack()">go back</button>
   
 ```
 ### ../../../app02/frontend/src/app/dish.service.ts 
