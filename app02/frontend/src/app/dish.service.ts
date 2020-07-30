@@ -15,4 +15,8 @@ export class DishService {
     this.messageService.add('DishService, fetched dishes');
     return of(DISHES);
   }
+  getDish(id: number): Observable<Dish>{
+    this.messageService.add(`Dish fetched: id: ${id}`);
+    return of(DISHES.find( dish => dish.id === id ));
+  } 
 }

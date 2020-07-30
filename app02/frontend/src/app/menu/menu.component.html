@@ -1,10 +1,9 @@
-<h2>Menu</h2>
 <ul class="menu">
-  <li *ngFor="let dish of dishes"
-    [class.selected]="dish === selectedDish"
-    (click)="onSelect(dish)"> 
-  <span>id:</span>{{dish.id}}
-  <span>name:</span>{{dish.name}}
+  <li *ngFor="let dish of dishes">
+    <a
+    routerLink="/detail/{{dish.id}}">
+
+      <span>{{dish.id}}</span>{{dish.name}}
+    </a>
   </li>
 </ul>
-<app-dish-detail [dish]="selectedDish"></app-dish-detail>

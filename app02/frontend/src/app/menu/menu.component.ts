@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Dish } from '../dish';
-//import { DISHES } from '../mock-dishes';
 import { DishService } from '../dish.service';
 import { MessageService } from '../message.service';
 
@@ -12,19 +11,12 @@ import { MessageService } from '../message.service';
 export class MenuComponent implements OnInit {
 
   dishes: Dish[];
-  selectedDish: Dish;
 
   constructor(
-    private dishService: DishService,
-    private messageService: MessageService) { }
+    private dishService: DishService) { }
 
   ngOnInit(): void {
     this.getDishes();
-  }
-
-  onSelect(dish: Dish): void{
-    this.selectedDish = dish;
-    this.messageService.add(`DishComponent, Selected id=${dish.id}`);
   }
 
   getDishes(): void{

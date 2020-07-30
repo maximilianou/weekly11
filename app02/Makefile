@@ -9,3 +9,5 @@ ng4:
 	docker-compose -f docker-compose.dev.yml down	
 ng5: 
 	docker system prune -a # delete all docker images in your computer
+ng6:
+	#cd frontend && ng generate module app-routing --flat --module=app
