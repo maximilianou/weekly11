@@ -1,16 +1,3 @@
-### ../../../app01/Makefile 
-```
-ng1:
-	npm install -g @angular/cli
-	ng new frontend
-ng2: 
-	cd frontend && ng serve
-ng3:
-	docker-compose -f docker-compose.dev.yml up	--build
-ng4:
-	docker-compose -f docker-compose.dev.yml down	
-
-```
 ### ../../../app01/docker-compose.dev.yml 
 ```
 version: "3.8" # specify docker-compose version
@@ -69,6 +56,19 @@ services:
 #      - ./mongo/db:/data/db
 #    ports:
 #      - "27017:27017" # specify port forewarding
+
+```
+### ../../../app01/Makefile 
+```
+ng1:
+	npm install -g @angular/cli
+	ng new frontend
+ng2: 
+	cd frontend && ng serve
+ng3:
+	docker-compose -f docker-compose.dev.yml up	--build
+ng4:
+	docker-compose -f docker-compose.dev.yml down	
 
 ```
 ### ../../../app01/frontend/Dockerfile.dev 
@@ -149,6 +149,7 @@ CMD ["npm", "start"]
 ```
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -159,18 +160,27 @@ import { DishDetailComponent } from './dish-detail/dish-detail.component';
 import { MessagesComponent } from './messages/messages.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 
+import { HttpClientInMemoryWebApiModule } from 'angular-in-memory-web-api';
+import { InMemoryDataService } from './in-memory-data.service';
+import { DishSearchComponent } from './dish-search/dish-search.component';
+
 @NgModule({
   declarations: [
     AppComponent,
     MenuComponent,
     DishDetailComponent,
     MessagesComponent,
-    DashboardComponent
+    DashboardComponent,
+    DishSearchComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    HttpClientModule,
+    HttpClientInMemoryWebApiModule.forRoot(
+      InMemoryDataService, { dataEncapsulation: false }
+    )
   ],
   providers: [],
   bootstrap: [AppComponent]
@@ -273,18 +283,40 @@ export class MenuComponent implements OnInit {
     this.dishService.getDishes()
       .subscribe( dishes => this.dishes = dishes );
   }
+  add(name: string): void {
+    name = name.trim();
+    if(!name){
+      return;
+    }else{
+      this.dishService.addDish({name} as Dish)
+      .subscribe(dish => {
+        this.dishes.push(dish)
+      });
+    }
+  }
+  delete(dish: Dish): void {
+    this.dishes = this.dishes.filter(h => h !== dish)
+    this.dishService.deleteDish(dish).subscribe();
+  }
 }
 
 ```
 ### ../../../app02/frontend/src/app/menu/menu.component.html 
 ```
+<div>
+  <label>Dish name:<input #dishName /></label>
+  <button (click)="add(dishName.value);dishName.value='';">
+    add
+  </button>
+</div>
 <ul class="menu">
   <li *ngFor="let dish of dishes">
     <a
     routerLink="/detail/{{dish.id}}">
-
       <span>{{dish.id}}</span>{{dish.name}}
     </a>
+  <button class="delete" title="delete dish" 
+    (click)="delete(dish)">X</button>
   </li>
 </ul>
 
@@ -324,6 +356,10 @@ export class DishDetailComponent implements OnInit {
   goBack(): void {
     this.location.back();
   }
+  save(): void{
+    this.dishService.updateDish(this.dish)
+      .subscribe(() => this.goBack());
+  }
 
 }
 
@@ -340,31 +376,104 @@ export class DishDetailComponent implements OnInit {
     </div>
   </div>
   <button (click)="goBack()">go back</button>
+  <button (click)="save()">save</button>
   
 ```
 ### ../../../app02/frontend/src/app/dish.service.ts 
 ```
 import { Injectable } from '@angular/core';
 import { Dish } from './dish';
-import { DISHES } from './mock-dishes';
 import { Observable, of } from 'rxjs';
 import { MessageService } from './message.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { catchError, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DishService {
 
-  constructor(private messageService: MessageService) { }
+  private dishesUrl = 'api/dishes';
+  httpOptions = {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json'})
+  };
+  constructor(
+    private http: HttpClient, 
+    private messageService: MessageService) { 
+    }
+  private log(message: string) {
+    this.messageService.add(`DishService: ${message}`);
 
+  }
   getDishes(): Observable<Dish[]>{
-    this.messageService.add('DishService, fetched dishes');
-    return of(DISHES);
+    return this.http.get<Dish[]>(this.dishesUrl)
+      .pipe(
+        tap(_ => this.log('fetched dishes')),
+        catchError(this.handleError<Dish[]>('getDishes',[]))
+      );
   }
   getDish(id: number): Observable<Dish>{
-    this.messageService.add(`Dish fetched: id: ${id}`);
-    return of(DISHES.find( dish => dish.id === id ));
+    const url = `${this.dishesUrl}/${id}`;
+    return this.http.get<Dish>(url)
+      .pipe(
+        tap(_ => this.log(`fethed: ${id}`)),
+        catchError(this.handleError<Dish>(`getDish id:${id}`))
+      );
   } 
+  private handleError<T>(operation = 'operation', result?: T){
+    return (error: any): Observable<T> => {
+      console.error(error);
+      this.log(`${operation} failed: ${error.message}`);
+      return of(result as T);
+    }
+  }
+  updateDish(dish: Dish): Observable<any>{
+    return this.http.put(this.dishesUrl, dish, this.httpOptions)
+    .pipe(
+      tap(_ => this.log(`udpate: ${dish.id}`)),
+      catchError( this.handleError<any>('updateDish'))
+    );
+  }
+  addDish(dish: Dish): Observable<Dish>{
+    return this.http.post<Dish>(this.dishesUrl, dish, this.httpOptions)
+      .pipe(
+        tap((newDish: Dish) => this.log(`added: ${newDish.id}`)),
+        catchError(this.handleError<Dish>('addDish'))
+      );
+  }
+  deleteDish(dish: Dish | number): Observable<Dish>{
+    const id = typeof dish === 'number' ? dish : dish.id;
+    const url = `${this.dishesUrl}/${id}`;
+    return this.http.delete<Dish>(url, this.httpOptions)
+      .pipe(
+        tap(_ => this.log(`delele: ${id}`)),
+        catchError(this.handleError<Dish>('deleteDish'))
+      );
+  }
+  searchDish(term: string): Observable<Dish[]>{
+    if(!term.trim()){
+      return of([]);
+    }else{
+      return this.http.get<Dish[]>(`${this.dishesUrl}/?name=${term}`)
+      .pipe(
+        tap(x => x.length ? 
+            this.log(`found dish matching: ${term}`):
+            this.log(`no dish matching: ${term}`)),
+        catchError(this.handleError<Dish[]>('searchDish',[])));
+    }
+  }
+  getDishNo404<Data>(id: number): Observable<Dish>{
+    const url = `${this.dishesUrl}/?id=${id}`;
+    return this.http.get<Dish>(url)
+      .pipe(
+        map(dishes => dishes[0]),
+        tap(h => {
+          const outcome = h ? 'fetched' : 'did not find';
+          this.log(`${outcome} dish id: ${id}`);
+        } ),
+        catchError(this.handleError<Dish>(`getDish id=${id}`))
+      );
+  }
 }
 
 ```
@@ -459,4 +568,63 @@ export class DashboardComponent implements OnInit {
         </div>
     </a>
 </div>
+
+<app-dish-search></app-dish-search>
+```
+### ../../../app02/frontend/src/app/dish-search/dish-search.component.ts 
+```
+import { Component, OnInit } from '@angular/core';
+
+import { Observable, Subject } from 'rxjs';
+
+import {
+  debounceTime, distinctUntilChanged, switchMap
+} from 'rxjs/operators';
+
+import { Dish } from '../dish';
+import { DishService } from '../dish.service';
+
+
+@Component({
+  selector: 'app-dish-search',
+  templateUrl: './dish-search.component.html',
+  styleUrls: ['./dish-search.component.css']
+})
+export class DishSearchComponent implements OnInit {
+
+  dishes$: Observable<Dish[]>;
+  private searchTerms = new Subject<string>()
+
+  constructor(private dishService: DishService) { }
+
+  ngOnInit(): void {
+    this.dishes$ = this.searchTerms
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term:string) => this.dishService.searchDish(term))
+      );
+  }
+
+  search(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+}
+
+```
+### ../../../app02/frontend/src/app/dish-search/dish-search.component.html 
+```
+<div id="search-component">
+    <h4><label for="search-box">Dish Search</label></h4>
+    <input #searchBox id="search-box" (input)="search(searchBox.value)" />
+    <ul class="search-result">
+        <li *ngFor="let dish of dishes$ | async">
+            <a routerLink="/detail/{{dish.id}}">
+                {{dish.name}}
+            </a>
+        </li>
+    </ul>
+</div>
+
 ```
