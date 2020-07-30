@@ -71,6 +71,30 @@ services:
 #      - "27017:27017" # specify port forewarding
 
 ```
+### ../../../app01/frontend/Dockerfile.dev 
+```
+# Create image based off of the official 12.8-alpine
+FROM node:14-alpine
+
+# disabling ssl for npm for Dev or if you are behind proxy
+RUN npm set strict-ssl false
+#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
+
+WORKDIR /frontend
+
+# Copy dependency definitions
+COPY package.json ./
+
+## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
+RUN npm i
+
+COPY . .
+
+EXPOSE 4200 49153
+
+CMD ["npm", "start"]
+
+```
 ### ../../../app01/frontend/package.json 
 ```
 {
@@ -121,30 +145,6 @@ services:
 }
 
 ```
-### ../../../app01/frontend/Dockerfile.dev 
-```
-# Create image based off of the official 12.8-alpine
-FROM node:14-alpine
-
-# disabling ssl for npm for Dev or if you are behind proxy
-RUN npm set strict-ssl false
-#RUN echo "nameserver 8.8.8.8" |  tee /etc/resolv.conf > /dev/null
-
-WORKDIR /frontend
-
-# Copy dependency definitions
-COPY package.json ./
-
-## installing and Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-RUN npm i
-
-COPY . .
-
-EXPOSE 4200 49153
-
-CMD ["npm", "start"]
-
-```
 ### ../../../app02/frontend/src/app/app.module.ts 
 ```
 import { BrowserModule } from '@angular/platform-browser';
@@ -176,6 +176,28 @@ import { DashboardComponent } from './dashboard/dashboard.component';
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+
+```
+### ../../../app02/frontend/src/app/app-routing.module.ts 
+```
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+import { MenuComponent } from './menu/menu.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { DishDetailComponent } from './dish-detail/dish-detail.component';
+
+const routes: Routes = [
+  { path: 'menu', component: MenuComponent },
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'detail/:id', component: DishDetailComponent },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
 
 ```
 ### ../../../app02/frontend/src/app/app.component.ts 
@@ -224,19 +246,6 @@ export const DISHES : Dish[] = [
     { id: 17, name: 'Soup' },
 ]
 ```
-### ../../../app02/frontend/src/app/menu/menu.component.html 
-```
-<ul class="menu">
-  <li *ngFor="let dish of dishes">
-    <a
-    routerLink="/detail/{{dish.id}}">
-
-      <span>{{dish.id}}</span>{{dish.name}}
-    </a>
-  </li>
-</ul>
-
-```
 ### ../../../app02/frontend/src/app/menu/menu.component.ts 
 ```
 import { Component, OnInit } from '@angular/core';
@@ -265,6 +274,19 @@ export class MenuComponent implements OnInit {
       .subscribe( dishes => this.dishes = dishes );
   }
 }
+
+```
+### ../../../app02/frontend/src/app/menu/menu.component.html 
+```
+<ul class="menu">
+  <li *ngFor="let dish of dishes">
+    <a
+    routerLink="/detail/{{dish.id}}">
+
+      <span>{{dish.id}}</span>{{dish.name}}
+    </a>
+  </li>
+</ul>
 
 ```
 ### ../../../app02/frontend/src/app/dish-detail/dish-detail.component.ts 

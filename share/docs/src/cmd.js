@@ -16,6 +16,10 @@ const filesIn = [
     mark: '\n```\n',
   },
   {
+    path: '../../../app02/frontend/src/app/app-routing.module.ts',
+    mark: '\n```\n',
+  },
+  {
     path: '../../../app02/frontend/src/app/app.component.ts',
     mark: '\n```\n',
   },
