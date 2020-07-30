@@ -1,3 +1,9 @@
+<div>
+  <label>Dish name:<input #dishName /></label>
+  <button (click)="add(dishName.value);dishName.value='';">
+    add
+  </button>
+</div>
 <ul class="menu">
   <li *ngFor="let dish of dishes">
     <a

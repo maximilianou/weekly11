@@ -23,4 +23,16 @@ export class MenuComponent implements OnInit {
     this.dishService.getDishes()
       .subscribe( dishes => this.dishes = dishes );
   }
+  add(name: string): void {
+    name = name.trim();
+    if(!name){
+      return;
+    }else{
+      this.dishService.addDish({name} as Dish)
+      .subscribe(dish => {
+        this.dishes.push(dish)
+      });
+    }
+
+  }
 }
