@@ -156,12 +156,16 @@ import { MenuComponent } from './menu/menu.component';
 
 import { FormsModule } from '@angular/forms';
 import { DishDetailComponent } from './dish-detail/dish-detail.component';
+import { MessagesComponent } from './messages/messages.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MenuComponent,
-    DishDetailComponent
+    DishDetailComponent,
+    MessagesComponent,
+    DashboardComponent
   ],
   imports: [
     BrowserModule,
@@ -191,8 +195,12 @@ export class AppComponent {
 ### ../../../app02/frontend/src/app/app.component.html 
 ```
 <h1>{{title}}</h1>
-<app-menu></app-menu>
+<nav>
+    <a routerLink="/dashboard" >Dashboard</a>
+    <a routerLink="/menu" >Menu</a>
+</nav>
 <router-outlet></router-outlet>
+<app-messages></app-messages>
 
 ```
 ### ../../../app02/frontend/src/app/dish.ts 
@@ -220,8 +228,9 @@ export const DISHES : Dish[] = [
 ```
 import { Component, OnInit } from '@angular/core';
 import { Dish } from '../dish';
-//import { DISHES } from '../mock-dishes';
 import { DishService } from '../dish.service';
+import { MessageService } from '../message.service';
+
 @Component({
   selector: 'app-menu',
   templateUrl: './menu.component.html',
@@ -230,42 +239,42 @@ import { DishService } from '../dish.service';
 export class MenuComponent implements OnInit {
 
   dishes: Dish[];
-  selectedDish: Dish;
 
-  constructor(private dishService: DishService) { }
+  constructor(
+    private dishService: DishService) { }
 
   ngOnInit(): void {
     this.getDishes();
   }
 
-  onSelect(dish: Dish): void{
-    this.selectedDish = dish;
-  }
-
   getDishes(): void{
-    this.dishes = this.dishService.getDishes();
+    this.dishService.getDishes()
+      .subscribe( dishes => this.dishes = dishes );
   }
 }
 
 ```
 ### ../../../app02/frontend/src/app/menu/menu.component.html 
 ```
-<h2>Menu</h2>
 <ul class="menu">
-  <li *ngFor="let dish of dishes"
-    [class.selected]="dish === selectedDish"
-    (click)="onSelect(dish)"> 
-  <span>id:</span>{{dish.id}}
-  <span>name:</span>{{dish.name}}
+  <li *ngFor="let dish of dishes">
+    <a
+    routerLink="/detail/{{dish.id}}">
+
+      <span>{{dish.id}}</span>{{dish.name}}
+    </a>
   </li>
 </ul>
-<app-dish-detail [dish]="selectedDish"></app-dish-detail>
 
 ```
 ### ../../../app02/frontend/src/app/dish-detail/dish-detail.component.ts 
 ```
 import { Component, OnInit, Input } from '@angular/core';
 import { Dish } from '../dish';
+
+import { ActivatedRoute } from "@angular/router";
+import { Location } from '@angular/common';
+import { DishService } from '../dish.service';
 
 @Component({
   selector: 'app-dish-detail',
@@ -276,9 +285,19 @@ export class DishDetailComponent implements OnInit {
 
   @Input() dish : Dish;
 
-  constructor() { }
+  constructor(
+    private route: ActivatedRoute,
+    private dishService: DishService,
+    private location: Location
+  ) { }
 
   ngOnInit(): void {
+    this.getDish();
+  }
+  getDish(): void {
+    const id = +this.route.snapshot.paramMap.get('id');
+    this.dishService.getDish(id)
+      .subscribe(dish => this.dish = dish);
   }
 
 }
@@ -302,17 +321,116 @@ export class DishDetailComponent implements OnInit {
 import { Injectable } from '@angular/core';
 import { Dish } from './dish';
 import { DISHES } from './mock-dishes';
+import { Observable, of } from 'rxjs';
+import { MessageService } from './message.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DishService {
 
+  constructor(private messageService: MessageService) { }
+
+  getDishes(): Observable<Dish[]>{
+    this.messageService.add('DishService, fetched dishes');
+    return of(DISHES);
+  }
+  getDish(id: number): Observable<Dish>{
+    this.messageService.add(`Dish fetched: id: ${id}`);
+    return of(DISHES.find( dish => dish.id === id ));
+  } 
+}
+
+```
+### ../../../app02/frontend/src/app/message.service.ts 
+```
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MessageService {
+
+  messages: string[] = [];
+
   constructor() { }
 
-  getDishes(): Dish[]{
-    return DISHES;
+  add(message: string){
+    this.messages.push(message);
+  }
+  clear(){
+    this.messages = [];
+  }
+}
+  
+```
+### ../../../app02/frontend/src/app/messages/messages.component.ts 
+```
+import { Component, OnInit } from '@angular/core';
+import { MessageService } from '../message.service';
+
+@Component({
+  selector: 'app-messages',
+  templateUrl: './messages.component.html',
+  styleUrls: ['./messages.component.css']
+})
+export class MessagesComponent implements OnInit {
+
+  constructor(public messageService: MessageService) { }
+
+  ngOnInit(): void {
+  }
+
+}
+
+```
+### ../../../app02/frontend/src/app/messages/messages.component.html 
+```
+<div *ngIf="messageService.messages.length">
+    <h2>Messages</h2>   
+    <button class="clear"
+        (click)="messageService.clear()"
+    >clear</button>
+    <div *ngFor="let message of messageService.messages">{{message}}</div>
+</div>
+
+```
+### ../../../app02/frontend/src/app/dashboard/dashboard.component.ts 
+```
+import { Component, OnInit } from '@angular/core';
+import { Dish } from '../dish';
+import { DishService } from '../dish.service';
+
+@Component({
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
+})
+export class DashboardComponent implements OnInit {
+
+  dishes: Dish[] = [];
+
+  constructor(private dishService: DishService) { }
+
+  ngOnInit(): void {
+  }
+
+  getDishes(): void {
+    this.dishService.getDishes()
+      .subscribe(dishes => this.dishes = dishes.slice(1,5));
   }
 }
 
+```
+### ../../../app02/frontend/src/app/dashboard/dashboard.component.html 
+```
+<h3>Top dishes</h3>
+<div class="grid grid-pad">
+    <a *ngFor="let dish of dishes" class="col-1-4"
+        routerLink="/detail/{{dish.id}}">
+        <div class="module dish">
+            <h4>{{dish.name}}</h4>
+        </div>
+    </a>
+</div>
 ```
