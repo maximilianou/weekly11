@@ -4,7 +4,6 @@ import { Observable, of } from 'rxjs';
 import { MessageService } from './message.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
-import { ThrowStmt } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
@@ -52,12 +51,44 @@ export class DishService {
       catchError( this.handleError<any>('updateDish'))
     );
   }
-  addDish(dish: Dish): Observable<Hero>{
+  addDish(dish: Dish): Observable<Dish>{
     return this.http.post<Dish>(this.dishesUrl, dish, this.httpOptions)
       .pipe(
         tap((newDish: Dish) => this.log(`added: ${newDish.id}`)),
         catchError(this.handleError<Dish>('addDish'))
       );
-
+  }
+  deleteDish(dish: Dish | number): Observable<Dish>{
+    const id = typeof dish === 'number' ? dish : dish.id;
+    const url = `${this.dishesUrl}/${id}`;
+    return this.http.delete<Dish>(url, this.httpOptions)
+      .pipe(
+        tap(_ => this.log(`delele: ${id}`)),
+        catchError(this.handleError<Dish>('deleteDish'))
+      );
+  }
+  searchDish(term: string): Observable<Dish[]>{
+    if(!term.trim()){
+      return of([]);
+    }else{
+      return this.http.get<Dish[]>(`${this.dishesUrl}/?name=${term}`)
+      .pipe(
+        tap(x => x.length ? 
+            this.log(`found dish matching: ${term}`):
+            this.log(`no dish matching: ${term}`)),
+        catchError(this.handleError<Dish[]>('searchDish',[])));
+    }
+  }
+  getDishNo404<Data>(id: number): Observable<Dish>{
+    const url = `${this.dishesUrl}/?id=${id}`;
+    return this.http.get<Dish>(url)
+      .pipe(
+        map(dishes => dishes[0]),
+        tap(h => {
+          const outcome = h ? 'fetched' : 'did not find';
+          this.log(`${outcome} dish id: ${id}`);
+        } ),
+        catchError(this.handleError<Dish>(`getDish id=${id}`))
+      );
   }
 }

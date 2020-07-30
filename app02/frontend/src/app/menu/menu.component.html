@@ -8,8 +8,9 @@
   <li *ngFor="let dish of dishes">
     <a
     routerLink="/detail/{{dish.id}}">
-
       <span>{{dish.id}}</span>{{dish.name}}
     </a>
+  <button class="delete" title="delete dish" 
+    (click)="delete(dish)">X</button>
   </li>
 </ul>

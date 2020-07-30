@@ -14,3 +14,4 @@ ng6:
 ng7:
 	#cd frontend && npm install angular-in-memory-web-api --save
 	#cd frontend && ng generate service InMemoryData
+	#cd frontend && ng generate component dish-search

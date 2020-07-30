@@ -33,6 +33,9 @@ export class MenuComponent implements OnInit {
         this.dishes.push(dish)
       });
     }
-
+  }
+  delete(dish: Dish): void {
+    this.dishes = this.dishes.filter(h => h !== dish)
+    this.dishService.deleteDish(dish).subscribe();
   }
 }
