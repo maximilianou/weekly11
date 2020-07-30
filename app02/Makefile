@@ -11,3 +11,6 @@ ng5:
 	docker system prune -a # delete all docker images in your computer
 ng6:
 	#cd frontend && ng generate module app-routing --flat --module=app
+ng7:
+	#cd frontend && npm install angular-in-memory-web-api --save
+	#cd frontend && ng generate service InMemoryData

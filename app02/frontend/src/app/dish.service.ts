@@ -1,22 +1,58 @@
 import { Injectable } from '@angular/core';
 import { Dish } from './dish';
-import { DISHES } from './mock-dishes';
 import { Observable, of } from 'rxjs';
 import { MessageService } from './message.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { catchError, map, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DishService {
 
-  constructor(private messageService: MessageService) { }
+  private dishesUrl = 'api/dishes';
+  httpOptions = {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json'})
+  };
+  constructor(
+    private http: HttpClient, 
+    private messageService: MessageService) { 
+
+    }
+
+  private log(message: string) {
+    this.messageService.add(`DishService: ${message}`);
+
+  }
 
   getDishes(): Observable<Dish[]>{
-    this.messageService.add('DishService, fetched dishes');
-    return of(DISHES);
+    return this.http.get<Dish[]>(this.dishesUrl)
+      .pipe(
+        tap(_ => this.log('fetched dishes')),
+        catchError(this.handleError<Dish[]>('getDishes',[]))
+      );
   }
   getDish(id: number): Observable<Dish>{
-    this.messageService.add(`Dish fetched: id: ${id}`);
-    return of(DISHES.find( dish => dish.id === id ));
+    const url = `${this.dishesUrl}/${id}`;
+    return this.http.get<Dish>(url)
+      .pipe(
+        tap(_ => this.log(`fethed: ${id}`)),
+        catchError(this.handleError<Dish>(`getDish id:${id}`))
+      );
   } 
+  private handleError<T>(operation = 'operation', result?: T){
+    return (error: any): Observable<T> => {
+      console.error(error);
+      this.log(`${operation} failed: ${error.message}`);
+      return of(result as T);
+    }
+  }
+  updateDish(dish: Dish): Observable<any>{
+    return this.http.put(this.dishesUrl, dish, this.httpOptions)
+    .pipe(
+      tap(_ => this.log(`udpate: ${dish.id}`)),
+      catchError( this.handleError<any>('updateDish'))
+    );
+
+  }
 }
